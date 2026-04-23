@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "www.cdiscount.com" },
@@ -9,6 +8,7 @@ const nextConfig: NextConfig = {
   },
   webpack: (config, { dev }) => {
     if (dev) {
+      // Huge snapshot HTML under public/ can slow or confuse the dev watcher.
       const extraIgnored = ["**/public/snapshots/**"];
       const currentIgnored = config.watchOptions?.ignored;
       if (Array.isArray(currentIgnored)) {

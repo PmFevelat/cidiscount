@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import type { ProjectMeta } from "@/lib/projects";
 
 type Props = {
   open: boolean;
   onClose: () => void;
+  resumeProject?: ProjectMeta | null;
 };
 
 type CaptureDone = {
@@ -14,7 +16,21 @@ type CaptureDone = {
   projectUrl: string;
 };
 
-export function NewProjectDialog({ open, onClose }: Props) {
+function toCaptureDoneFromDraft(project: ProjectMeta): CaptureDone {
+  return {
+    slug: project.slug,
+    csvUrl: `/snapshots/${project.slug}/images.csv`,
+    projectUrl: `/projects/${project.slug}`,
+  };
+}
+
+function toInternalProjectUrl(rawUrl: string, fallbackSlug: string): string {
+  const trimmed = rawUrl.trim();
+  if (trimmed.startsWith("/")) return trimmed;
+  return `/projects/${fallbackSlug}`;
+}
+
+export function NewPdpDialog({ open, onClose, resumeProject = null }: Props) {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [resultCsvFile, setResultCsvFile] = useState<File | null>(null);
@@ -24,49 +40,69 @@ export function NewProjectDialog({ open, onClose }: Props) {
   const [logs, setLogs] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const isResumingDraftPdp =
+    resumeProject?.kind === "pdp" && resumeProject?.status === "draft";
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !submitting) onClose();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !submitting) onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, submitting, onClose]);
+  }, [open, onClose, submitting]);
 
   useEffect(() => {
     if (!open) {
-      // Reset when closing.
       setUrl("");
       setResultCsvFile(null);
       setStep("capture");
       setCaptureDone(null);
+      setSubmitting(false);
       setLogs([]);
       setError(null);
-      setSubmitting(false);
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    if (!isResumingDraftPdp || !resumeProject) return;
+
+    setUrl(resumeProject.url || "");
+    setResultCsvFile(null);
+    setStep("finalize");
+    setCaptureDone(toCaptureDoneFromDraft(resumeProject));
+    setSubmitting(false);
+    setError(null);
+    setLogs([
+      `▸ Reprise du brouillon PDP: ${resumeProject.slug}`,
+      "✓ Étape 1 déjà terminée. Le CSV source est prêt au téléchargement.",
+    ]);
+  }, [open, isResumingDraftPdp, resumeProject]);
+
   async function runPipeline(formData: FormData): Promise<Record<string, unknown>> {
-    const res = await fetch("/api/projects", {
+    const response = await fetch("/api/pdp", {
       method: "POST",
       body: formData,
     });
-    if (!res.ok || !res.body) {
-      const msg = await res.text().catch(() => "");
-      throw new Error(msg || `HTTP ${res.status}`);
+    if (!response.ok || !response.body) {
+      const message = await response.text().catch(() => "");
+      throw new Error(message || `HTTP ${response.status}`);
     }
 
-    const reader = res.body.getReader();
+    const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
     let donePayload: Record<string, unknown> | null = null;
+    let heartbeatCount = 0;
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
       const parts = buffer.split("\n");
       buffer = parts.pop() ?? "";
+
       for (const line of parts) {
         if (!line.trim()) continue;
         if (line.startsWith("__DONE__ ")) {
@@ -76,7 +112,15 @@ export function NewProjectDialog({ open, onClose }: Props) {
             throw new Error("Réponse finale invalide.");
           }
         } else if (line.startsWith("__HEARTBEAT__ ")) {
-          // Keep-alive frame from API streaming, ignored in UI logs.
+          heartbeatCount += 1;
+          if (heartbeatCount % 3 === 0) {
+            const keepAliveMessage =
+              "… pipeline PDP toujours en cours (initialisation navigateur / scraping).";
+            setLogs((prev) => {
+              if (prev[prev.length - 1] === keepAliveMessage) return prev;
+              return [...prev, keepAliveMessage];
+            });
+          }
           continue;
         } else if (line.startsWith("__ERROR__ ")) {
           throw new Error(line.slice(10));
@@ -85,44 +129,49 @@ export function NewProjectDialog({ open, onClose }: Props) {
         }
       }
     }
+
     if (!donePayload) {
-      throw new Error("La pipeline n'a pas renvoyé de résultat final.");
+      throw new Error("La pipeline PDP n'a pas renvoyé de résultat final.");
     }
     return donePayload;
   }
 
-  async function submitCapture(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function submitCapture(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (!url) return;
     setSubmitting(true);
-    setLogs(["▸ Étape 1/2 : scraping de la page…"]);
+    setLogs(["▸ Étape 1/2 : scraping des images PDP (carrousel)…"]);
     setError(null);
+
     try {
-      const fd = new FormData();
-      fd.append("phase", "scrape");
-      fd.append("url", url);
-      const payload = await runPipeline(fd);
+      const formData = new FormData();
+      formData.append("phase", "scrape");
+      formData.append("url", url);
+
+      const payload = await runPipeline(formData);
       const done = {
         slug: String(payload.slug ?? ""),
         csvUrl: String(payload.csvUrl ?? ""),
         projectUrl: String(payload.projectUrl ?? ""),
       };
       if (!done.slug || !done.csvUrl) {
-        throw new Error("Réponse incomplète après scraping.");
+        throw new Error("Réponse incomplète après scraping PDP.");
       }
+
       setCaptureDone(done);
       setStep("finalize");
       setSubmitting(false);
+      router.refresh();
       setLogs((prev) => [
         ...prev,
-        "✓ Scraping terminé.",
-        "✓ CSV des images prêt au téléchargement.",
+        "✓ Scraping PDP terminé.",
+        "✓ CSV des images PDP prêt au téléchargement.",
       ]);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes("signal: SIGKILL")) {
         setError(
-          "Le process de scraping catalogue a été interrompu (SIGKILL). Relance le serveur dev dans un terminal local et réessaie.",
+          "Le process de scraping PDP a été interrompu (SIGKILL). Relance le serveur dev dans un terminal local et réessaie.",
         );
       } else {
         setError(message);
@@ -131,31 +180,41 @@ export function NewProjectDialog({ open, onClose }: Props) {
     }
   }
 
-  async function submitFinalize(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function submitFinalize(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (!captureDone || !resultCsvFile) return;
     setSubmitting(true);
     setError(null);
-    setLogs((prev) => [...prev, "▸ Étape 2/2 : application du CSV redesign…"]);
+    setLogs((prev) => [...prev, "▸ Étape 2/2 : application du CSV redesign PDP…"]);
 
     try {
-      const fd = new FormData();
-      fd.append("phase", "finalize");
-      fd.append("slug", captureDone.slug);
-      fd.append("csv", resultCsvFile);
-      const payload = await runPipeline(fd);
+      const formData = new FormData();
+      formData.append("phase", "finalize");
+      formData.append("slug", captureDone.slug);
+      formData.append("csv", resultCsvFile);
+      const payload = await runPipeline(formData);
       const finalSlug = String(payload.slug ?? captureDone.slug);
-      const finalUrl = String(payload.projectUrl ?? `/projects/${finalSlug}`);
-      setLogs((prev) => [...prev, "✓ Projet finalisé."]);
+      const finalUrl = toInternalProjectUrl(
+        String(payload.projectUrl ?? `/projects/${finalSlug}`),
+        finalSlug,
+      );
+      setLogs((prev) => [...prev, "✓ PDP finalisée."]);
+      setSubmitting(false);
+      onClose();
+      router.refresh();
+      router.push(finalUrl);
       setTimeout(() => {
-        router.refresh();
-        router.push(finalUrl);
-      }, 350);
+        if (typeof window === "undefined") return;
+        const targetPath = finalUrl.split("?")[0] || finalUrl;
+        if (window.location.pathname !== targetPath) {
+          window.location.assign(finalUrl);
+        }
+      }, 900);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes("signal: SIGKILL")) {
         setError(
-          "Le process de finalisation catalogue a été interrompu (SIGKILL). Relance le serveur dev dans un terminal local et réessaie.",
+          "Le process de finalisation PDP a été interrompu (SIGKILL). Relance le serveur dev dans un terminal local et réessaie.",
         );
       } else {
         setError(message);
@@ -176,7 +235,7 @@ export function NewProjectDialog({ open, onClose }: Props) {
       <div
         ref={dialogRef}
         className="w-full max-w-xl rounded-2xl bg-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         <form
           onSubmit={step === "capture" ? submitCapture : submitFinalize}
@@ -185,11 +244,11 @@ export function NewProjectDialog({ open, onClose }: Props) {
           <div className="flex items-start justify-between px-6 pt-6 pb-2">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                Nouveau projet
+                {isResumingDraftPdp ? "Reprendre PDP" : "Nouvelle PDP"}
               </h2>
               <p className="mt-1 text-[13px] text-gray-500">
-                Étape 1 : scrape depuis l&apos;URL. Étape 2 : upload du CSV
-                redesign pour finaliser et créer la card projet.
+                Étape 1 : scrape des images de la PDP. Étape 2 : upload du CSV
+                redesign pour finaliser l&apos;avant/après.
               </p>
             </div>
             <button
@@ -217,15 +276,15 @@ export function NewProjectDialog({ open, onClose }: Props) {
               <>
                 <label className="flex flex-col gap-1.5">
                   <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-600">
-                    URL de la page catalogue
+                    URL de la page produit (PDP)
                   </span>
                   <input
                     type="url"
                     required
                     autoFocus
-                    placeholder="https://example.com/catalogue/…"
+                    placeholder="https://www.cdiscount.com/.../f-...html"
                     value={url}
-                    onChange={(e) => setUrl(e.target.value)}
+                    onChange={(event) => setUrl(event.target.value)}
                     disabled={submitting}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:border-[#3a2ff2] focus:ring-2 focus:ring-[#3a2ff2]/20 disabled:bg-gray-50"
                   />
@@ -235,11 +294,11 @@ export function NewProjectDialog({ open, onClose }: Props) {
               <>
                 <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
                   <div className="text-[13px] font-medium text-indigo-900">
-                    Étape 1 terminée : images scrapées.
+                    Étape 1 terminée : images PDP scrapées.
                   </div>
                   <div className="mt-1 text-[12px] text-indigo-800">
                     Télécharge le CSV généré, remplace les URLs côté image
-                    processing, puis réimporte le CSV final ci-dessous.
+                    processing, puis réimporte le CSV final.
                   </div>
                   {captureDone && (
                     <a
@@ -256,7 +315,7 @@ export function NewProjectDialog({ open, onClose }: Props) {
                       >
                         <path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 21h16" />
                       </svg>
-                      Télécharger le CSV des images scrapées
+                      Télécharger le CSV des images PDP
                     </a>
                   )}
                 </div>
@@ -267,11 +326,11 @@ export function NewProjectDialog({ open, onClose }: Props) {
                   </span>
                   <div className="flex items-center gap-3">
                     <input
-                      id="result-csv-input"
+                      id="result-pdp-csv-input"
                       type="file"
                       accept=".csv,text/csv"
-                      onChange={(e) =>
-                        setResultCsvFile(e.target.files?.[0] ?? null)
+                      onChange={(event) =>
+                        setResultCsvFile(event.target.files?.[0] ?? null)
                       }
                       disabled={submitting}
                       className="block w-full text-[13px] text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[13px] file:font-medium file:text-gray-700 hover:file:bg-gray-200 disabled:opacity-50"
@@ -282,7 +341,7 @@ export function NewProjectDialog({ open, onClose }: Props) {
                         onClick={() => {
                           setResultCsvFile(null);
                           const input = document.getElementById(
-                            "result-csv-input",
+                            "result-pdp-csv-input",
                           ) as HTMLInputElement | null;
                           if (input) input.value = "";
                         }}
@@ -293,8 +352,10 @@ export function NewProjectDialog({ open, onClose }: Props) {
                     )}
                   </div>
                   <span className="text-[11px] text-gray-400">
-                    Colonnes attendues : <code>order</code>,{" "}
-                    <code>former_image_url</code>, <code>new_image_url</code>
+                    Colonnes acceptées (image/vidéo) : <code>order</code>,{" "}
+                    <code>former_image_url</code>/<code>former_media_url</code>/
+                    <code>former_video_url</code>, <code>new_image_url</code>/
+                    <code>new_media_url</code>/<code>new_video_url</code>
                   </span>
                 </label>
               </>
@@ -303,8 +364,8 @@ export function NewProjectDialog({ open, onClose }: Props) {
 
           {(submitting || logs.length > 0 || error) && (
             <div className="mx-6 mb-4 max-h-40 overflow-y-auto rounded-lg bg-gray-900 px-3 py-2 font-mono text-[11px] leading-relaxed text-gray-100">
-              {logs.map((line, i) => (
-                <div key={i} className="whitespace-pre-wrap">
+              {logs.map((line, index) => (
+                <div key={index} className="whitespace-pre-wrap">
                   {line}
                 </div>
               ))}
@@ -353,11 +414,11 @@ export function NewProjectDialog({ open, onClose }: Props) {
               )}
               {submitting
                 ? step === "capture"
-                  ? "Scraping en cours…"
-                  : "Finalisation en cours…"
+                  ? "Scraping PDP en cours…"
+                  : "Finalisation PDP en cours…"
                 : step === "capture"
-                  ? "Étape 1 — Scraper les images"
-                  : "Étape 2 — Finaliser le projet"}
+                  ? "Étape 1 — Scraper les images PDP"
+                  : "Étape 2 — Finaliser la PDP"}
             </button>
           </div>
         </form>

@@ -14,23 +14,22 @@ const FRONTEND_DIR = process.cwd();
 
 function slugifyFallback(url: string): string {
   try {
-    const u = new URL(url);
-    const host = u.hostname.replace(/^www\./, "").split(".")[0];
-    const pathPart = u.pathname
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").split(".")[0];
+    const pathPart = parsed.pathname
       .split("/")
       .filter(Boolean)
       .slice(-2)
       .join("-");
     const raw = [host, pathPart].filter(Boolean).join("-");
-    return (
-      raw
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 64) || `project-${randomUUID().slice(0, 8)}`
-    );
+    const normalized = raw
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 56);
+    return `pdp-${normalized || randomUUID().slice(0, 8)}`;
   } catch {
-    return `project-${randomUUID().slice(0, 8)}`;
+    return `pdp-${randomUUID().slice(0, 8)}`;
   }
 }
 
@@ -47,7 +46,7 @@ async function pickPythonBin(): Promise<string> {
 
 async function saveTempCsv(file: File): Promise<string> {
   const buf = Buffer.from(await file.arrayBuffer());
-  const tempCsvPath = path.join(os.tmpdir(), `snapshot-csv-${randomUUID()}.csv`);
+  const tempCsvPath = path.join(os.tmpdir(), `pdp-csv-${randomUUID()}.csv`);
   await fs.writeFile(tempCsvPath, buf);
   return tempCsvPath;
 }
@@ -59,10 +58,23 @@ function streamCommand(params: {
   cleanupPaths?: string[];
 }) {
   const { pythonBin, args, donePayload, cleanupPaths = [] } = params;
+  let child: ReturnType<typeof spawn> | null = null;
+  let heartbeat: ReturnType<typeof setInterval> | null = null;
+  let streamClosed = false;
+  let cleanedUp = false;
+
+  const cleanupTempFiles = async () => {
+    if (cleanedUp) return;
+    cleanedUp = true;
+    for (const entry of cleanupPaths) {
+      await fs.unlink(entry).catch(() => {});
+    }
+  };
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
-      const child = spawn(pythonBin, args, {
+      child = spawn(pythonBin, args, {
         cwd: REPO_ROOT,
         env: {
           ...process.env,
@@ -71,11 +83,27 @@ function streamCommand(params: {
       });
 
       const send = (line: string) => {
-        controller.enqueue(encoder.encode(line + "\n"));
+        if (streamClosed) return;
+        try {
+          controller.enqueue(encoder.encode(line + "\n"));
+        } catch {
+          streamClosed = true;
+        }
       };
 
-      send(`▸ Pipeline: ${pythonBin} ${args.join(" ")}`);
-      const heartbeat = setInterval(() => {
+      const closeStream = () => {
+        if (streamClosed) return;
+        streamClosed = true;
+        if (heartbeat) clearInterval(heartbeat);
+        try {
+          controller.close();
+        } catch {
+          // Stream may already be closed/cancelled by the client.
+        }
+      };
+
+      send(`▸ Pipeline PDP: ${pythonBin} ${args.join(" ")}`);
+      heartbeat = setInterval(() => {
         send("__HEARTBEAT__ pipeline-running");
       }, 4000);
 
@@ -97,32 +125,32 @@ function streamCommand(params: {
       });
 
       child.on("close", async (code, signal) => {
-        clearInterval(heartbeat);
-        for (const p of cleanupPaths) {
-          await fs.unlink(p).catch(() => {});
-        }
+        await cleanupTempFiles();
         if (code === 0) {
           send(`__DONE__ ${JSON.stringify(donePayload)}`);
         } else {
           let detail =
             stderrBuffer.trim().split(/\r?\n/).slice(-3).join(" | ") ||
             `exit code ${code}`;
-          if (signal) {
-            detail = `${detail} (signal: ${signal})`;
-          }
+          if (signal) detail = `${detail} (signal: ${signal})`;
           send(`__ERROR__ ${detail}`);
         }
-        controller.close();
+        closeStream();
       });
 
       child.on("error", async (err) => {
-        clearInterval(heartbeat);
-        for (const p of cleanupPaths) {
-          await fs.unlink(p).catch(() => {});
-        }
+        await cleanupTempFiles();
         send(`__ERROR__ ${err.message}`);
-        controller.close();
+        closeStream();
       });
+    },
+    cancel() {
+      streamClosed = true;
+      if (heartbeat) clearInterval(heartbeat);
+      cleanupTempFiles().catch(() => {});
+      if (child && !child.killed) {
+        child.kill("SIGTERM");
+      }
     },
   });
 
@@ -150,7 +178,7 @@ export async function POST(request: NextRequest) {
     const slug = sanitizeSlug(rawSlug) || slugifyFallback(url);
     const args = [
       "-m",
-      "scraper.pipeline",
+      "scraper.pipeline_pdp",
       "--url",
       url,
       "--slug",
@@ -159,6 +187,7 @@ export async function POST(request: NextRequest) {
       FRONTEND_DIR,
       "--headless",
     ];
+
     return streamCommand({
       pythonBin,
       args,
@@ -173,12 +202,11 @@ export async function POST(request: NextRequest) {
   if (phase === "finalize") {
     const slug = sanitizeSlug(String(form.get("slug") ?? "").trim());
     const csvFile = form.get("csv");
-    if (!slug) {
-      return new Response("Slug manquant", { status: 400 });
-    }
+    if (!slug) return new Response("Slug manquant", { status: 400 });
     if (!(csvFile instanceof File)) {
       return new Response("CSV manquant", { status: 400 });
     }
+
     const tempCsvPath = await saveTempCsv(csvFile);
     const args = [
       "-m",
@@ -190,6 +218,7 @@ export async function POST(request: NextRequest) {
       "--frontend-dir",
       FRONTEND_DIR,
     ];
+
     return streamCommand({
       pythonBin,
       args,

@@ -1,7 +1,9 @@
+import type { Dirent } from "node:fs";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
 export type ProjectStatus = "draft" | "ready";
+export type ProjectKind = "catalog" | "pdp";
 
 export type ProjectMeta = {
   slug: string;
@@ -16,6 +18,7 @@ export type ProjectMeta = {
   thumbnailUrl: string | null;
   status: ProjectStatus;
   finalizedAt: string | null;
+  kind: ProjectKind;
 };
 
 type RawMeta = Partial<{
@@ -31,6 +34,7 @@ type RawMeta = Partial<{
   thumbnail_url: string;
   status: string;
   finalized_at: string;
+  kind: string;
 }>;
 
 const SNAPSHOTS_DIR = path.join(process.cwd(), "public", "snapshots");
@@ -43,6 +47,7 @@ function safeProjectSlug(slug: string): string | null {
 function normalizeMeta(raw: RawMeta, fallbackSlug: string): ProjectMeta {
   const createdAt = raw.created_at ?? null;
   const status = raw.status === "ready" ? "ready" : "draft";
+  const kind = raw.kind === "pdp" ? "pdp" : "catalog";
 
   return {
     slug: raw.slug || fallbackSlug,
@@ -57,6 +62,7 @@ function normalizeMeta(raw: RawMeta, fallbackSlug: string): ProjectMeta {
     thumbnailUrl: raw.thumbnail_url || null,
     status,
     finalizedAt: raw.finalized_at ?? null,
+    kind,
   };
 }
 
@@ -75,7 +81,7 @@ async function readProjectMeta(slug: string): Promise<ProjectMeta | null> {
 }
 
 export async function listProjects(): Promise<ProjectMeta[]> {
-  let entries: fs.Dirent[] = [];
+  let entries: Dirent[] = [];
   try {
     entries = await fs.readdir(SNAPSHOTS_DIR, { withFileTypes: true });
   } catch {
@@ -99,4 +105,11 @@ export async function listProjects(): Promise<ProjectMeta[]> {
 
 export async function getProject(slug: string): Promise<ProjectMeta | null> {
   return readProjectMeta(slug);
+}
+
+export async function listProjectsByKind(
+  kind: ProjectKind,
+): Promise<ProjectMeta[]> {
+  const projects = await listProjects();
+  return projects.filter((project) => project.kind === kind);
 }

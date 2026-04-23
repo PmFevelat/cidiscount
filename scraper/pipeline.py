@@ -131,6 +131,7 @@ def run_pipeline(
 
     existing_meta.update(
         {
+            "kind": "catalog",
             "created_at": datetime.now(timezone.utc).isoformat(),
             "has_redesign": bool(csv_path),
             "csv_pairs": csv_pairs_count,

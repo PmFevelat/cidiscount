@@ -9,6 +9,7 @@ pointing at the original page so external CSS / fonts / icons keep resolving.
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 from dataclasses import dataclass
@@ -22,8 +23,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
-
 
 @dataclass
 class SnapshotResult:
@@ -50,6 +49,32 @@ COOKIE_BUTTON_XPATHS = [
 ]
 
 
+def _find_cached_chromedriver() -> Path | None:
+    env_path = (os.environ.get("CHROMEDRIVER_PATH") or "").strip()
+    if env_path:
+        candidate = Path(env_path).expanduser()
+        if candidate.exists():
+            return candidate.resolve()
+
+    # webdriver-manager cache (macOS Apple Silicon path).
+    cache_root = Path.home() / ".wdm" / "drivers" / "chromedriver" / "mac64"
+    candidates: list[Path] = []
+    if cache_root.exists():
+        candidates.extend(cache_root.glob("*/chromedriver-mac-arm64/chromedriver"))
+
+    # Optional project-local binary (if provided manually).
+    project_candidate = (
+        Path(__file__).resolve().parents[1] / "tools" / "chromedriver" / "chromedriver"
+    )
+    if project_candidate.exists():
+        candidates.append(project_candidate)
+
+    if not candidates:
+        return None
+    # Keep newest cache entry first.
+    return max(candidates, key=lambda entry: entry.stat().st_mtime).resolve()
+
+
 def make_driver(headless: bool) -> webdriver.Chrome:
     options = Options()
     options.page_load_strategy = "eager"
@@ -63,6 +88,22 @@ def make_driver(headless: bool) -> webdriver.Chrome:
     )
     if headless:
         options.add_argument("--headless=new")
+
+    cached_driver = _find_cached_chromedriver()
+    if cached_driver:
+        print(f"[DRIVER] Utilisation du driver local: {cached_driver}", flush=True)
+        try:
+            service = Service(executable_path=str(cached_driver))
+            return webdriver.Chrome(service=service, options=options)
+        except WebDriverException as exc:
+            print(
+                f"[DRIVER] Driver local incompatible ({exc}). Fallback auto-download...",
+                flush=True,
+            )
+
+    print("[DRIVER] Résolution du driver via webdriver-manager...", flush=True)
+    from webdriver_manager.chrome import ChromeDriverManager
+
     service = Service(executable_path=ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
@@ -132,39 +173,45 @@ def progressive_scroll(
 
 # JavaScript that freezes the current DOM into a self-contained snapshot:
 # - resolves every <img src>/srcset to the currently-loaded URL
-# - removes all <script> tags so the snapshot can't mutate itself further
+# - optionally keeps scripts for interactive snapshots (PDP carousel, etc.)
 # - injects <base href> so relative URLs (CSS / fonts / icons) keep working
 # - removes known overlay blockers (cookie banners, fullscreen dialogs, etc.)
 FREEZE_DOM_JS = r"""
 const baseUrl = window.location.href;
+const keepScripts = Boolean(arguments[0]);
 
-// 1) Resolve every <img> to its rendered src, clear srcset / data-* lazies.
-document.querySelectorAll('img').forEach((img) => {
-    const candidate = img.currentSrc
-        || img.getAttribute('src')
-        || img.getAttribute('data-src')
-        || img.getAttribute('data-lazy-src')
-        || img.getAttribute('data-original')
-        || '';
-    img.removeAttribute('srcset');
-    img.removeAttribute('data-src');
-    img.removeAttribute('data-lazy-src');
-    img.removeAttribute('data-original');
-    img.removeAttribute('loading');
-    if (candidate) {
-        try {
-            img.setAttribute('src', new URL(candidate, baseUrl).href);
-        } catch (e) {
-            img.setAttribute('src', candidate);
+// 1–2) For static catalog snapshots we normalize <img>/<picture> so CSV swaps are easy.
+// For interactive PDP snapshots (keepScripts) we must NOT mutate the DOM: React / SPA
+// hydration re-runs on the saved HTML and breaks if attributes differ from what bundles expect.
+if (!keepScripts) {
+    document.querySelectorAll('img').forEach((img) => {
+        const candidate = img.currentSrc
+            || img.getAttribute('src')
+            || img.getAttribute('data-src')
+            || img.getAttribute('data-lazy-src')
+            || img.getAttribute('data-original')
+            || '';
+        img.removeAttribute('srcset');
+        img.removeAttribute('data-src');
+        img.removeAttribute('data-lazy-src');
+        img.removeAttribute('data-original');
+        img.removeAttribute('loading');
+        if (candidate) {
+            try {
+                img.setAttribute('src', new URL(candidate, baseUrl).href);
+            } catch (e) {
+                img.setAttribute('src', candidate);
+            }
         }
-    }
-});
+    });
+    document.querySelectorAll('picture source').forEach((s) => s.remove());
+}
 
-// 2) Resolve <source srcset> inside <picture>.
-document.querySelectorAll('picture source').forEach((s) => s.remove());
-
-// 3) Kill scripts / service workers / noscripts so nothing re-hydrates later.
-document.querySelectorAll('script, noscript').forEach((n) => n.remove());
+// 3) Remove <noscript>. Scripts can be kept for interactive snapshots.
+document.querySelectorAll('noscript').forEach((n) => n.remove());
+if (!keepScripts) {
+    document.querySelectorAll('script').forEach((n) => n.remove());
+}
 
 // 4) Remove common cookie / consent overlays.
 const overlaySelectors = [
@@ -196,6 +243,37 @@ if (!base) {
 }
 base.setAttribute('href', baseUrl);
 base.setAttribute('target', '_blank');
+
+// 7) Inline all currently loaded CSS rules.
+// Some e-commerce CDNs block stylesheet requests from localhost snapshots
+// (403/WAF), so we keep a self-contained styled HTML.
+try {
+    const cssChunks = [];
+    for (const sheet of Array.from(document.styleSheets || [])) {
+        try {
+            const rules = sheet.cssRules;
+            if (!rules || !rules.length) continue;
+            let cssText = '';
+            for (const rule of Array.from(rules)) {
+                cssText += rule.cssText + '\n';
+            }
+            if (cssText.trim()) cssChunks.push(cssText);
+        } catch (e) {
+            // Ignore unreadable sheets (cross-origin/CORS protected).
+        }
+    }
+    if (cssChunks.length) {
+        let inlineStyle = document.getElementById('__snapshot_inline_styles__');
+        if (!inlineStyle) {
+            inlineStyle = document.createElement('style');
+            inlineStyle.id = '__snapshot_inline_styles__';
+            document.head.appendChild(inlineStyle);
+        }
+        inlineStyle.textContent = cssChunks.join('\n');
+    }
+} catch (e) {
+    // Best effort only.
+}
 
 return {
     html: '<!DOCTYPE html>\n' + document.documentElement.outerHTML,
@@ -299,7 +377,7 @@ def snapshot_site(
         print(f"[SNAPSHOT] {len(raw_images)} image(s) retenue(s).")
 
         print("[SNAPSHOT] Gel du DOM et extraction du HTML...")
-        frozen: dict[str, Any] = driver.execute_script(FREEZE_DOM_JS)
+        frozen: dict[str, Any] = driver.execute_script(FREEZE_DOM_JS, False)
         html = frozen["html"]
         title = frozen.get("title", "")
         doc_width = int(frozen.get("width", 1440))

@@ -19,6 +19,22 @@ from urllib.parse import urlparse
 
 
 SIZE_SUFFIX_RE = re.compile(r"_[A-Z]+_NOPAD$", re.IGNORECASE)
+OLD_URL_KEYS = (
+    "former_image_url",
+    "original_image_url",
+    "former_media_url",
+    "original_media_url",
+    "former_video_url",
+    "original_video_url",
+)
+NEW_URL_KEYS = (
+    "new_image_url",
+    "processed_image_url",
+    "new_media_url",
+    "processed_media_url",
+    "new_video_url",
+    "processed_video_url",
+)
 
 
 def load_mapping(csv_path: Path) -> list[tuple[str, str]]:
@@ -26,24 +42,28 @@ def load_mapping(csv_path: Path) -> list[tuple[str, str]]:
     with csv_path.open("r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         fieldnames = {c.strip() for c in (reader.fieldnames or [])}
-        old_format = {"original_image_url", "processed_image_url"}
-        new_format = {"former_image_url", "new_image_url"}
-        if not (old_format.issubset(fieldnames) or new_format.issubset(fieldnames)):
+        has_old_col = any(key in fieldnames for key in OLD_URL_KEYS)
+        has_new_col = any(key in fieldnames for key in NEW_URL_KEYS)
+        if not (has_old_col and has_new_col):
             raise ValueError(
-                "Le CSV doit contenir soit "
-                "('original_image_url', 'processed_image_url') soit "
-                "('former_image_url', 'new_image_url'). "
+                "Le CSV doit contenir une colonne source et une colonne cible parmi: "
+                "former_image_url/new_image_url, "
+                "original_image_url/processed_image_url, "
+                "former_media_url/new_media_url, "
+                "former_video_url/new_video_url. "
                 f"Colonnes trouvées: {reader.fieldnames}"
             )
         for row in reader:
-            original = (
-                (row.get("former_image_url") or "").strip()
-                or (row.get("original_image_url") or "").strip()
-            )
-            processed = (
-                (row.get("new_image_url") or "").strip()
-                or (row.get("processed_image_url") or "").strip()
-            )
+            original = ""
+            processed = ""
+            for key in OLD_URL_KEYS:
+                original = (row.get(key) or "").strip()
+                if original:
+                    break
+            for key in NEW_URL_KEYS:
+                processed = (row.get(key) or "").strip()
+                if processed:
+                    break
             if not original or not processed:
                 continue
             pairs.append((original, processed))

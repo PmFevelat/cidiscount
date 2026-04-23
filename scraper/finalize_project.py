@@ -58,10 +58,18 @@ def _count_csv_pairs(csv_path: Path) -> int:
             original = (
                 (row.get("former_image_url") or "").strip()
                 or (row.get("original_image_url") or "").strip()
+                or (row.get("former_media_url") or "").strip()
+                or (row.get("original_media_url") or "").strip()
+                or (row.get("former_video_url") or "").strip()
+                or (row.get("original_video_url") or "").strip()
             )
             processed = (
                 (row.get("new_image_url") or "").strip()
                 or (row.get("processed_image_url") or "").strip()
+                or (row.get("new_media_url") or "").strip()
+                or (row.get("processed_media_url") or "").strip()
+                or (row.get("new_video_url") or "").strip()
+                or (row.get("processed_video_url") or "").strip()
             )
             if original and processed:
                 out += 1
