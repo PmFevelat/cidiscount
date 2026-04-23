@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Piscines et spa - Cdiscount",
-  description: "Clone Cdiscount - Piscines et spa",
+  title: "Before / After snapshot",
+  description: "Capture + redesign slider",
 };
 
 export default function RootLayout({

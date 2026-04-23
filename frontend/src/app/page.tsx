@@ -1,11 +1,9 @@
-import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
-import { StoreView } from "@/components/StoreView";
+import { ProjectsGrid } from "@/components/ProjectsGrid";
+import { listProjects } from "@/lib/projects";
 
-export default function Home() {
-  return (
-    <BeforeAfterSlider
-      before={<StoreView mode="original" />}
-      after={<StoreView mode="redesign" />}
-    />
-  );
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const projects = await listProjects();
+  return <ProjectsGrid projects={projects} />;
 }

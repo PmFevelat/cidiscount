@@ -7,6 +7,29 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "i2.cdscdn.com" },
     ],
   },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      const extraIgnored = ["**/public/snapshots/**"];
+      const currentIgnored = config.watchOptions?.ignored;
+      if (Array.isArray(currentIgnored)) {
+        config.watchOptions = {
+          ...(config.watchOptions || {}),
+          ignored: [...currentIgnored, ...extraIgnored],
+        };
+      } else if (typeof currentIgnored === "string") {
+        config.watchOptions = {
+          ...(config.watchOptions || {}),
+          ignored: [currentIgnored, ...extraIgnored],
+        };
+      } else {
+        config.watchOptions = {
+          ...(config.watchOptions || {}),
+          ignored: extraIgnored,
+        };
+      }
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
