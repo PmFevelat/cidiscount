@@ -44,7 +44,7 @@ export function ProjectCard({ project, onResumeDraft }: Props) {
   const handleCopyLink = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const url = `${window.location.origin}/projects/${project.slug}`;
+    const url = `${window.location.origin}/projects/${project.slug}?share=1`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
