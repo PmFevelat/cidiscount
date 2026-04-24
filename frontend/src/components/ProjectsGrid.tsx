@@ -167,9 +167,8 @@ export function ProjectsGrid({
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-[1200px] items-center justify-between px-4 py-2.5 sm:px-6">
-          {/* Logo */}
-          <div className="flex items-center gap-2 shrink-0">
+        <div className="mx-auto flex max-w-[1200px] items-center px-4 py-2.5 sm:px-6">
+          <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#3a2ff2] text-white shadow-sm">
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 12l4-4 4 4 4-4 4 4" />
@@ -178,17 +177,6 @@ export function ProjectsGrid({
             </div>
             <h1 className="text-[15px] font-semibold text-gray-900">Redesign Studio</h1>
           </div>
-
-          {/* New button */}
-          <button
-            onClick={openNew}
-            className="inline-flex items-center gap-1.5 rounded-md bg-[#3a2ff2] px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-[#2a20d8]"
-          >
-            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            {newLabel}
-          </button>
         </div>
       </header>
 
@@ -212,27 +200,39 @@ export function ProjectsGrid({
 
       {/* Main content */}
       <main className="mx-auto max-w-[1200px] px-6 py-8">
-        {/* Tabs */}
-        <nav className="mb-8 flex items-center gap-1 self-start rounded-lg bg-gray-200/70 p-1 w-fit">
-          {(["catalog", "pdp"] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`rounded-md px-5 py-1.5 text-[13px] font-medium transition ${
-                tab === t
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {t === "catalog" ? "Catalogue" : "PDP"}
-              <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                tab === t ? "bg-[#3a2ff2]/10 text-[#3a2ff2]" : "bg-gray-300/80 text-gray-500"
-              }`}>
-                {t === "catalog" ? catalogProjects.length : pdpProjects.length}
-              </span>
-            </button>
-          ))}
-        </nav>
+        {/* Tabs + New button */}
+        <div className="mb-8 flex items-center justify-between">
+          <nav className="flex items-center gap-1 rounded-lg bg-gray-200/70 p-1">
+            {(["catalog", "pdp"] as Tab[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`rounded-md px-5 py-1.5 text-[13px] font-medium transition ${
+                  tab === t
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {t === "catalog" ? "Catalogue" : "PDP"}
+                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  tab === t ? "bg-[#3a2ff2]/10 text-[#3a2ff2]" : "bg-gray-300/80 text-gray-500"
+                }`}>
+                  {t === "catalog" ? catalogProjects.length : pdpProjects.length}
+                </span>
+              </button>
+            ))}
+          </nav>
+
+          <button
+            onClick={openNew}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[#3a2ff2] px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-[#2a20d8]"
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {newLabel}
+          </button>
+        </div>
 
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-[13px] font-semibold uppercase tracking-wide text-gray-400">
