@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
-export const maxDuration = 600;
+export const maxDuration = 300;
 
 const REPO_ROOT = path.resolve(process.cwd(), "..");
 const VENV_PYTHON = path.join(REPO_ROOT, ".venv", "bin", "python3");
