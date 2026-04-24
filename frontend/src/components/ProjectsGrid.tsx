@@ -202,7 +202,7 @@ export function ProjectsGrid({
       <main className="mx-auto max-w-[1200px] px-6 py-8">
         {/* Tabs + New button */}
         <div className="mb-8 flex items-center justify-between">
-          <nav className="flex items-center gap-1 rounded-lg bg-gray-200/70 p-1">
+          <nav className="flex items-center gap-0.5 rounded-lg bg-gray-200/70 p-0.5">
             {(["catalog", "pdp"] as Tab[]).map((t) => (
               <button
                 key={t}
