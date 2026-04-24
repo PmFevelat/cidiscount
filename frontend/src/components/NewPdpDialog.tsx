@@ -1,12 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { CsvEnrichedDropZone } from "@/components/CsvEnrichedDropZone";
+import { ScraperLogBlock } from "@/components/ScraperLogBlock";
 import type { ProjectMeta } from "@/lib/projects";
 
 type Props = {
   open: boolean;
   onClose: () => void;
+  /** Brouillon PDP : ouvre l’étape 2 (téléchargement CSV). */
   resumeProject?: ProjectMeta | null;
 };
 
@@ -15,6 +18,8 @@ type CaptureDone = {
   csvUrl: string;
   projectUrl: string;
 };
+
+type Step = "capture" | "downloadCsv" | "uploadCsv";
 
 function toCaptureDoneFromDraft(project: ProjectMeta): CaptureDone {
   return {
@@ -34,14 +39,13 @@ export function NewPdpDialog({ open, onClose, resumeProject = null }: Props) {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [resultCsvFile, setResultCsvFile] = useState<File | null>(null);
-  const [step, setStep] = useState<"capture" | "finalize">("capture");
+  const [step, setStep] = useState<Step>("capture");
   const [captureDone, setCaptureDone] = useState<CaptureDone | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showBrowser, setShowBrowser] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const isResumingDraftPdp =
-    resumeProject?.kind === "pdp" && resumeProject?.status === "draft";
 
   useEffect(() => {
     if (!open) return;
@@ -61,24 +65,26 @@ export function NewPdpDialog({ open, onClose, resumeProject = null }: Props) {
       setSubmitting(false);
       setLogs([]);
       setError(null);
+      setShowBrowser(false);
     }
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    if (!isResumingDraftPdp || !resumeProject) return;
-
+  useLayoutEffect(() => {
+    if (!open || !resumeProject) return;
+    if (resumeProject.kind !== "pdp" || resumeProject.status !== "draft") {
+      return;
+    }
     setUrl(resumeProject.url || "");
     setResultCsvFile(null);
-    setStep("finalize");
+    setStep("downloadCsv");
     setCaptureDone(toCaptureDoneFromDraft(resumeProject));
     setSubmitting(false);
     setError(null);
     setLogs([
-      `▸ Reprise du brouillon PDP: ${resumeProject.slug}`,
-      "✓ Étape 1 déjà terminée. Le CSV source est prêt au téléchargement.",
+      `▸ Reprise du brouillon PDP : ${resumeProject.slug}`,
+      "✓ Étape 1 déjà terminée. Télécharge le CSV puis poursuis vers l’import.",
     ]);
-  }, [open, isResumingDraftPdp, resumeProject]);
+  }, [open, resumeProject]);
 
   async function runPipeline(formData: FormData): Promise<Record<string, unknown>> {
     const response = await fetch("/api/pdp", {
@@ -140,13 +146,16 @@ export function NewPdpDialog({ open, onClose, resumeProject = null }: Props) {
     event.preventDefault();
     if (!url) return;
     setSubmitting(true);
-    setLogs(["▸ Étape 1/2 : scraping des images PDP (carrousel)…"]);
+    setLogs(["▸ Étape 1/3 : scraping des images PDP (carrousel)…"]);
     setError(null);
 
     try {
       const formData = new FormData();
       formData.append("phase", "scrape");
       formData.append("url", url);
+      if (showBrowser) {
+        formData.append("headed", "1");
+      }
 
       const payload = await runPipeline(formData);
       const done = {
@@ -159,13 +168,13 @@ export function NewPdpDialog({ open, onClose, resumeProject = null }: Props) {
       }
 
       setCaptureDone(done);
-      setStep("finalize");
+      setStep("downloadCsv");
       setSubmitting(false);
       router.refresh();
       setLogs((prev) => [
         ...prev,
         "✓ Scraping PDP terminé.",
-        "✓ CSV des images PDP prêt au téléchargement.",
+        "➡ Étape 2/3 : télécharge le CSV des images à enrichir.",
       ]);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -185,7 +194,7 @@ export function NewPdpDialog({ open, onClose, resumeProject = null }: Props) {
     if (!captureDone || !resultCsvFile) return;
     setSubmitting(true);
     setError(null);
-    setLogs((prev) => [...prev, "▸ Étape 2/2 : application du CSV redesign PDP…"]);
+    setLogs((prev) => [...prev, "▸ Étape 3/3 : application du CSV enrichi PDP…"]);
 
     try {
       const formData = new FormData();
@@ -223,6 +232,15 @@ export function NewPdpDialog({ open, onClose, resumeProject = null }: Props) {
     }
   }
 
+  function goToUploadStep() {
+    setStep("uploadCsv");
+  }
+
+  function goBackToDownload() {
+    setResultCsvFile(null);
+    setStep("downloadCsv");
+  }
+
   if (!open) return null;
 
   return (
@@ -237,191 +255,332 @@ export function NewPdpDialog({ open, onClose, resumeProject = null }: Props) {
         className="w-full max-w-xl rounded-2xl bg-white shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <form
-          onSubmit={step === "capture" ? submitCapture : submitFinalize}
-          className="flex flex-col"
-        >
-          <div className="flex items-start justify-between px-6 pt-6 pb-2">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                {isResumingDraftPdp ? "Reprendre PDP" : "Nouvelle PDP"}
-              </h2>
-              <p className="mt-1 text-[13px] text-gray-500">
-                Étape 1 : scrape des images de la PDP. Étape 2 : upload du CSV
-                redesign pour finaliser l&apos;avant/après.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
-              aria-label="Fermer"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
+        {step === "capture" && (
+          <form onSubmit={submitCapture} className="flex flex-col">
+            <div className="flex items-start justify-between px-6 pt-6 pb-2">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#3a2ff2]">
+                  Étape 1 sur 3
+                </p>
+                <h2 className="mt-1 text-lg font-semibold text-gray-900">
+                  Nouvelle PDP
+                </h2>
+                <p className="mt-1 text-[13px] text-gray-500">
+                  Indique l&apos;URL de la page produit à scraper.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={submitting}
+                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+                aria-label="Fermer"
               >
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-4 px-6 py-4">
-            {step === "capture" ? (
-              <>
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-600">
-                    URL de la page produit (PDP)
-                  </span>
-                  <input
-                    type="url"
-                    required
-                    autoFocus
-                    placeholder="https://www.cdiscount.com/.../f-...html"
-                    value={url}
-                    onChange={(event) => setUrl(event.target.value)}
-                    disabled={submitting}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:border-[#3a2ff2] focus:ring-2 focus:ring-[#3a2ff2]/20 disabled:bg-gray-50"
-                  />
-                </label>
-              </>
-            ) : (
-              <>
-                <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
-                  <div className="text-[13px] font-medium text-indigo-900">
-                    Étape 1 terminée : images PDP scrapées.
-                  </div>
-                  <div className="mt-1 text-[12px] text-indigo-800">
-                    Télécharge le CSV généré, remplace les URLs côté image
-                    processing, puis réimporte le CSV final.
-                  </div>
-                  {captureDone && (
-                    <a
-                      href={captureDone.csvUrl}
-                      download
-                      className="mt-3 inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-[12px] font-semibold text-indigo-700 shadow-sm hover:bg-indigo-100"
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 21h16" />
-                      </svg>
-                      Télécharger le CSV des images PDP
-                    </a>
-                  )}
-                </div>
-
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-600">
-                    CSV final avec nouvelles URLs
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <input
-                      id="result-pdp-csv-input"
-                      type="file"
-                      accept=".csv,text/csv"
-                      onChange={(event) =>
-                        setResultCsvFile(event.target.files?.[0] ?? null)
-                      }
-                      disabled={submitting}
-                      className="block w-full text-[13px] text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[13px] file:font-medium file:text-gray-700 hover:file:bg-gray-200 disabled:opacity-50"
-                    />
-                    {resultCsvFile && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setResultCsvFile(null);
-                          const input = document.getElementById(
-                            "result-pdp-csv-input",
-                          ) as HTMLInputElement | null;
-                          if (input) input.value = "";
-                        }}
-                        className="text-[12px] text-gray-500 hover:text-gray-700"
-                      >
-                        Retirer
-                      </button>
-                    )}
-                  </div>
-                  <span className="text-[11px] text-gray-400">
-                    Colonnes acceptées (image/vidéo) : <code>order</code>,{" "}
-                    <code>former_image_url</code>/<code>former_media_url</code>/
-                    <code>former_video_url</code>, <code>new_image_url</code>/
-                    <code>new_media_url</code>/<code>new_video_url</code>
-                  </span>
-                </label>
-              </>
-            )}
-          </div>
-
-          {(submitting || logs.length > 0 || error) && (
-            <div className="mx-6 mb-4 max-h-40 overflow-y-auto rounded-lg bg-gray-900 px-3 py-2 font-mono text-[11px] leading-relaxed text-gray-100">
-              {logs.map((line, index) => (
-                <div key={index} className="whitespace-pre-wrap">
-                  {line}
-                </div>
-              ))}
-              {error && <div className="text-red-300">✗ {error}</div>}
-            </div>
-          )}
-
-          <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-gray-50 px-6 py-4 rounded-b-2xl">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="rounded-lg px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={
-                submitting ||
-                (step === "capture" ? !url : !captureDone || !resultCsvFile)
-              }
-              className="inline-flex items-center gap-2 rounded-lg bg-[#3a2ff2] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#2a20d8] disabled:opacity-50"
-            >
-              {submitting && (
                 <svg
                   viewBox="0 0 24 24"
-                  className="h-4 w-4 animate-spin"
+                  className="h-5 w-5"
                   fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                 >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeOpacity="0.25"
-                    strokeWidth="4"
-                  />
-                  <path
-                    d="M12 2a10 10 0 0110 10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                  />
+                  <path d="M6 6l12 12M18 6L6 18" />
                 </svg>
-              )}
-              {submitting
-                ? step === "capture"
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4 px-6 py-4">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-600">
+                  URL de la page produit (PDP)
+                </span>
+                <input
+                  type="url"
+                  required
+                  autoFocus
+                  placeholder="https://www.cdiscount.com/.../f-...html"
+                  value={url}
+                  onChange={(event) => setUrl(event.target.value)}
+                  disabled={submitting}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:border-[#3a2ff2] focus:ring-2 focus:ring-[#3a2ff2]/20 disabled:bg-gray-50"
+                />
+              </label>
+              <label className="flex cursor-pointer items-start gap-2.5 text-[13px] leading-snug text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={showBrowser}
+                  onChange={(event) => setShowBrowser(event.target.checked)}
+                  disabled={submitting}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-[#3a2ff2] focus:ring-[#3a2ff2]"
+                />
+                <span>
+                  Afficher le navigateur (Chrome visible) — utile si le site
+                  bloque le mode headless ou affiche des modales.
+                </span>
+              </label>
+            </div>
+
+            <ScraperLogBlock lines={logs} error={error} className="mx-6 mb-4" />
+
+            <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-gray-50 px-6 py-4 rounded-b-2xl">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={submitting}
+                className="rounded-lg px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || !url}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#3a2ff2] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#2a20d8] disabled:opacity-50"
+              >
+                {submitting && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 animate-spin"
+                    fill="none"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeOpacity="0.25"
+                      strokeWidth="4"
+                    />
+                    <path
+                      d="M12 2a10 10 0 0110 10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                )}
+                {submitting
                   ? "Scraping PDP en cours…"
-                  : "Finalisation PDP en cours…"
-                : step === "capture"
-                  ? "Étape 1 — Scraper les images PDP"
-                  : "Étape 2 — Finaliser la PDP"}
-            </button>
+                  : "Lancer le scraping PDP"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === "downloadCsv" && (
+          <div className="flex flex-col">
+            <div className="flex items-start justify-between px-6 pt-6 pb-2">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#3a2ff2]">
+                  Étape 2 sur 3
+                </p>
+                <h2 className="mt-1 text-lg font-semibold text-gray-900">
+                  CSV des images PDP scrapées
+                </h2>
+                <p className="mt-1 text-[13px] text-gray-500">
+                  Télécharge le fichier, enrichis les URLs média / images, puis
+                  importe le CSV final à l&apos;étape 3.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                aria-label="Fermer"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="px-6 py-4">
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 p-5 shadow-sm">
+                <div className="text-[13px] font-medium text-indigo-900">
+                  Carrousel produit — export prêt
+                </div>
+                <p className="mt-2 text-[12px] leading-relaxed text-indigo-800/95">
+                  Complète les colonnes <code>new_image_url</code> (ou
+                  <code> new_media_url</code> / <code>new_video_url</code>) avant
+                  l&apos;import.
+                </p>
+                {captureDone && (
+                  <a
+                    href={captureDone.csvUrl}
+                    download
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-[14px] font-semibold text-indigo-700 shadow-md transition hover:bg-indigo-100"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 21h16" />
+                    </svg>
+                    Télécharger le CSV des images PDP
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <ScraperLogBlock
+              lines={logs}
+              error={null}
+              className="mx-6 mb-4"
+              maxHeightClass="max-h-32"
+            />
+
+            <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-gray-50 px-6 py-4 rounded-b-2xl">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={goToUploadStep}
+                disabled={!captureDone}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#3a2ff2] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#2a20d8] disabled:opacity-50"
+              >
+                Continuer — importer le CSV enrichi
+              </button>
+            </div>
           </div>
-        </form>
+        )}
+
+        {step === "uploadCsv" && (
+          <form onSubmit={submitFinalize} className="flex flex-col">
+            <div className="flex items-start justify-between px-6 pt-6 pb-2">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#3a2ff2]">
+                  Étape 3 sur 3
+                </p>
+                <h2 className="mt-1 text-lg font-semibold text-gray-900">
+                  Import du CSV final
+                </h2>
+                <p className="mt-1 text-[13px] text-gray-500">
+                  Uploade le CSV avec les colonnes
+                  <code className="mx-0.5 text-[12px]">new_*</code>
+                  renseignées pour finaliser l&apos;avant / après.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={submitting}
+                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+                aria-label="Fermer"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2 px-6 py-4">
+              <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-600">
+                CSV final avec nouvelles URLs
+              </span>
+              <CsvEnrichedDropZone
+                key={resultCsvFile ? resultCsvFile.name : "empty-pdp"}
+                inputId="result-pdp-csv-input"
+                file={resultCsvFile}
+                onFileChange={setResultCsvFile}
+                disabled={submitting}
+                helpText={
+                  <>
+                    Colonnes (image / vidéo) : <code>order</code>,{" "}
+                    <code>former_image_url</code>/
+                    <code>former_media_url</code>/
+                    <code>former_video_url</code>, <code>new_image_url</code>/
+                    <code>new_media_url</code>/<code>new_video_url</code>
+                  </>
+                }
+              />
+              {resultCsvFile && (
+                <button
+                  type="button"
+                  onClick={() => setResultCsvFile(null)}
+                  className="self-start text-[12px] text-gray-500 hover:text-gray-800"
+                >
+                  Effacer la sélection
+                </button>
+              )}
+            </div>
+
+            <ScraperLogBlock
+              lines={logs}
+              error={error}
+              className="mx-6 mb-4"
+              maxHeightClass="max-h-40"
+            />
+
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 bg-gray-50 px-6 py-4 rounded-b-2xl">
+              <button
+                type="button"
+                onClick={goBackToDownload}
+                disabled={submitting}
+                className="mr-auto rounded-lg px-3 py-2 text-[13px] font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+              >
+                ← Retour
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={submitting}
+                className="rounded-lg px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || !captureDone || !resultCsvFile}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#3a2ff2] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#2a20d8] disabled:opacity-50"
+              >
+                {submitting && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 animate-spin"
+                    fill="none"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeOpacity="0.25"
+                      strokeWidth="4"
+                    />
+                    <path
+                      d="M12 2a10 10 0 0110 10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                )}
+                {submitting ? "Finalisation en cours…" : "Finaliser la PDP"}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

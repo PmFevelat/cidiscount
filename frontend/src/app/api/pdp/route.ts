@@ -12,6 +12,25 @@ const REPO_ROOT = path.resolve(process.cwd(), "..");
 const VENV_PYTHON = path.join(REPO_ROOT, ".venv", "bin", "python3");
 const FRONTEND_DIR = process.cwd();
 
+function scraperWantsHeadless(form: { get: (name: string) => unknown }) {
+  const fromForm = String(form.get("headed") ?? "")
+    .trim()
+    .toLowerCase();
+  if (
+    fromForm === "1" ||
+    fromForm === "true" ||
+    fromForm === "on" ||
+    fromForm === "yes"
+  ) {
+    return false;
+  }
+  const env = (process.env.SCRAPER_HEADED ?? "").trim().toLowerCase();
+  if (env === "1" || env === "true" || env === "yes" || env === "on") {
+    return false;
+  }
+  return true;
+}
+
 function slugifyFallback(url: string): string {
   try {
     const parsed = new URL(url);
@@ -185,8 +204,10 @@ export async function POST(request: NextRequest) {
       slug,
       "--frontend-dir",
       FRONTEND_DIR,
-      "--headless",
     ];
+    if (scraperWantsHeadless(form)) {
+      args.push("--headless");
+    }
 
     return streamCommand({
       pythonBin,

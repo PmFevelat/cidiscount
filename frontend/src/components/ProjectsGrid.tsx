@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NewProjectDialog } from "./NewProjectDialog";
 import { NewPdpDialog } from "./NewPdpDialog";
 import { ProjectCard } from "./ProjectCard";
@@ -9,14 +9,56 @@ import type { ProjectMeta } from "@/lib/projects";
 type Props = {
   catalogProjects: ProjectMeta[];
   pdpProjects: ProjectMeta[];
+  initialResumeCatalogSlug?: string | null;
+  initialResumePdpSlug?: string | null;
 };
 
-export function ProjectsGrid({ catalogProjects, pdpProjects }: Props) {
+export function ProjectsGrid({
+  catalogProjects,
+  pdpProjects,
+  initialResumeCatalogSlug = null,
+  initialResumePdpSlug = null,
+}: Props) {
   const [catalogDialogOpen, setCatalogDialogOpen] = useState(false);
   const [pdpDialogOpen, setPdpDialogOpen] = useState(false);
   const [resumePdpProject, setResumePdpProject] = useState<ProjectMeta | null>(
     null,
   );
+  const [resumeCatalogProject, setResumeCatalogProject] =
+    useState<ProjectMeta | null>(null);
+  const urlOpenOnce = useRef(false);
+
+  useEffect(() => {
+    if (urlOpenOnce.current) return;
+    if (initialResumeCatalogSlug) {
+      const p = catalogProjects.find(
+        (x) => x.slug === initialResumeCatalogSlug,
+      );
+      if (p?.status === "draft") {
+        setResumeCatalogProject(p);
+        setCatalogDialogOpen(true);
+        urlOpenOnce.current = true;
+        if (typeof window !== "undefined") {
+          window.history.replaceState({}, "", "/");
+        }
+      }
+    } else if (initialResumePdpSlug) {
+      const p = pdpProjects.find((x) => x.slug === initialResumePdpSlug);
+      if (p?.status === "draft") {
+        setResumePdpProject(p);
+        setPdpDialogOpen(true);
+        urlOpenOnce.current = true;
+        if (typeof window !== "undefined") {
+          window.history.replaceState({}, "", "/");
+        }
+      }
+    }
+  }, [
+    initialResumeCatalogSlug,
+    initialResumePdpSlug,
+    catalogProjects,
+    pdpProjects,
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,7 +103,10 @@ export function ProjectsGrid({ catalogProjects, pdpProjects }: Props) {
               {catalogProjects.length > 1 ? "s" : ""}
             </span>
             <button
-              onClick={() => setCatalogDialogOpen(true)}
+              onClick={() => {
+                setResumeCatalogProject(null);
+                setCatalogDialogOpen(true);
+              }}
               className="inline-flex items-center gap-1.5 rounded-md bg-[#3a2ff2] px-2.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-[#2a20d8]"
             >
               <svg
@@ -101,7 +146,10 @@ export function ProjectsGrid({ catalogProjects, pdpProjects }: Props) {
               Lance ton premier catalogue en cliquant sur « Nouveau Catalogue ».
             </p>
             <button
-              onClick={() => setCatalogDialogOpen(true)}
+              onClick={() => {
+                setResumeCatalogProject(null);
+                setCatalogDialogOpen(true);
+              }}
               className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-[#3a2ff2] px-2.5 py-1.5 text-[12px] font-semibold text-white shadow-sm hover:bg-[#2a20d8]"
             >
               <svg
@@ -120,7 +168,14 @@ export function ProjectsGrid({ catalogProjects, pdpProjects }: Props) {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {catalogProjects.map((project) => (
-              <ProjectCard key={project.slug} project={project} />
+              <ProjectCard
+                key={project.slug}
+                project={project}
+                onResumeDraft={(draft) => {
+                  setResumeCatalogProject(draft);
+                  setCatalogDialogOpen(true);
+                }}
+              />
             ))}
           </div>
         )}
@@ -203,7 +258,7 @@ export function ProjectsGrid({ catalogProjects, pdpProjects }: Props) {
                 <ProjectCard
                   key={project.slug}
                   project={project}
-                  onResumeDraftPdp={(draftProject) => {
+                  onResumeDraft={(draftProject) => {
                     setResumePdpProject(draftProject);
                     setPdpDialogOpen(true);
                   }}
@@ -215,10 +270,22 @@ export function ProjectsGrid({ catalogProjects, pdpProjects }: Props) {
       </main>
 
       <NewProjectDialog
+        key={
+          resumeCatalogProject
+            ? `resume-cat-${resumeCatalogProject.slug}`
+            : "catalog-new"
+        }
         open={catalogDialogOpen}
-        onClose={() => setCatalogDialogOpen(false)}
+        onClose={() => {
+          setCatalogDialogOpen(false);
+          setResumeCatalogProject(null);
+        }}
+        resumeProject={resumeCatalogProject}
       />
       <NewPdpDialog
+        key={
+          resumePdpProject ? `resume-pdp-${resumePdpProject.slug}` : "pdp-new"
+        }
         open={pdpDialogOpen}
         resumeProject={resumePdpProject}
         onClose={() => {

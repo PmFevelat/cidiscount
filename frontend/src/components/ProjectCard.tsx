@@ -29,19 +29,21 @@ function hostname(url: string): string {
 
 type Props = {
   project: ProjectMeta;
-  onResumeDraftPdp?: (project: ProjectMeta) => void;
+  /**
+   * Brouillon : ouvre la modale catalogue ou PDP (bonne étape) au lieu
+   * de la page avant/après / iframe.
+   */
+  onResumeDraft?: (project: ProjectMeta) => void;
 };
 
-export function ProjectCard({ project, onResumeDraftPdp }: Props) {
+export function ProjectCard({ project, onResumeDraft }: Props) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const label = project.title || project.slug;
   const host = hostname(project.url);
   const created = formatDate(project.createdAt);
-  const isResumableDraftPdp =
-    project.kind === "pdp" &&
-    project.status === "draft" &&
-    typeof onResumeDraftPdp === "function";
+  const isResumableDraft =
+    project.status === "draft" && typeof onResumeDraft === "function";
 
   const cardClassName =
     "group relative flex h-full w-full max-w-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-sm transition hover:shadow-md hover:-translate-y-0.5 hover:border-gray-300";
@@ -165,13 +167,13 @@ export function ProjectCard({ project, onResumeDraftPdp }: Props) {
     </>
   );
 
-  if (isResumableDraftPdp) {
+  if (isResumableDraft) {
     return (
       <div className={cardClassName}>
         {deleteButton}
         <button
           type="button"
-          onClick={() => onResumeDraftPdp(project)}
+          onClick={() => onResumeDraft?.(project)}
           className="flex w-full min-w-0 flex-1 flex-col text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#3a2ff2]"
         >
           {cardContent}

@@ -1,0 +1,101 @@
+[
+  {
+    "order": 1,
+    "image_url": "https://cdn.ashley.com/assets/73611-64-46-77-46-65-HEAD-ON-SW-P1-KO.jpg",
+    "alt": "Calden 5-Piece Sectional",
+    "top": 0.0,
+    "left": 0.0,
+    "width": 800.0,
+    "height": 800.0,
+    "is_carousel": true,
+    "score": 999.0
+  },
+  {
+    "order": 2,
+    "image_url": "https://cdn.ashley.com/assets/73611-64-46-77-46-65-HEAD-ON-1x1.jpg",
+    "alt": "Calden 5-Piece Sectional",
+    "top": 10.0,
+    "left": 0.0,
+    "width": 800.0,
+    "height": 800.0,
+    "is_carousel": true,
+    "score": 999.0
+  },
+  {
+    "order": 3,
+    "image_url": "https://cdn.ashley.com/assets/73611-64-46-77-46-65-ANGLE-1x1.jpg",
+    "alt": "Calden 5-Piece Sectional",
+    "top": 20.0,
+    "left": 0.0,
+    "width": 800.0,
+    "height": 800.0,
+    "is_carousel": true,
+    "score": 999.0
+  },
+  {
+    "order": 4,
+    "image_url": "https://cdn.ashley.com/assets/73611-64-46-77-46-65-DETAIL-1x1.jpg",
+    "alt": "Calden 5-Piece Sectional",
+    "top": 30.0,
+    "left": 0.0,
+    "width": 800.0,
+    "height": 800.0,
+    "is_carousel": true,
+    "score": 999.0
+  },
+  {
+    "order": 5,
+    "image_url": "https://cdn.ashley.com/assets/73611-64-46-77-46-65-ANGLE-SW-P1-KO.jpg",
+    "alt": "Calden 5-Piece Sectional",
+    "top": 40.0,
+    "left": 0.0,
+    "width": 800.0,
+    "height": 800.0,
+    "is_carousel": true,
+    "score": 999.0
+  },
+  {
+    "order": 6,
+    "image_url": "https://cdn.ashley.com/assets/73611-64-46-77-46-65-BACK-SW-P1-KO.jpg",
+    "alt": "Calden 5-Piece Sectional",
+    "top": 50.0,
+    "left": 0.0,
+    "width": 800.0,
+    "height": 800.0,
+    "is_carousel": true,
+    "score": 999.0
+  },
+  {
+    "order": 7,
+    "image_url": "https://cdn.ashley.com/assets/73611-64-46-77-46-65-DIM.jpg",
+    "alt": "Calden 5-Piece Sectional",
+    "top": 60.0,
+    "left": 0.0,
+    "width": 800.0,
+    "height": 800.0,
+    "is_carousel": true,
+    "score": 999.0
+  },
+  {
+    "order": 8,
+    "image_url": "https://cdn.ashley.com/assets/73611-SWATCH.jpg",
+    "alt": "Calden 5-Piece Sectional",
+    "top": 70.0,
+    "left": 0.0,
+    "width": 800.0,
+    "height": 800.0,
+    "is_carousel": true,
+    "score": 999.0
+  },
+  {
+    "order": 9,
+    "image_url": "https://cdn.ashley.com/assets/73611-SWATCH-500.jpg",
+    "alt": "Calden 5-Piece Sectional",
+    "top": 80.0,
+    "left": 0.0,
+    "width": 800.0,
+    "height": 800.0,
+    "is_carousel": true,
+    "score": 999.0
+  }
+]

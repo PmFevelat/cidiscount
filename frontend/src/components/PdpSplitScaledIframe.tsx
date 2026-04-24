@@ -113,6 +113,7 @@ export function PdpSplitScaledIframe({
             transformOrigin: "0 0",
             background: "#fff",
           }}
+          referrerPolicy="no-referrer"
           sandbox={sandbox}
           loading="eager"
         />

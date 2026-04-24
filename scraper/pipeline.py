@@ -15,7 +15,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from scraper.apply_csv_redesign import apply_csv_to_snapshot, load_mapping
-from scraper.snapshot_site import SnapshotResult, slugify, snapshot_site
+from scraper.snapshot_site import (
+    MAX_CATALOG_IMAGES_DEFAULT,
+    SnapshotResult,
+    slugify,
+    snapshot_site,
+)
 
 
 DEFAULT_FRONTEND = Path(__file__).resolve().parents[1] / "frontend"
@@ -48,8 +53,19 @@ def parse_args() -> argparse.Namespace:
         default=80,
         help="Nombre max d'étapes de scroll pour déclencher le lazy-load.",
     )
-    p.add_argument("--scroll-pause", type=float, default=0.7)
+    p.add_argument(
+        "--scroll-pause",
+        type=float,
+        default=0.55,
+        help="Pause entre deux scrolls (secondes).",
+    )
     p.add_argument("--min-image-side", type=int, default=80)
+    p.add_argument(
+        "--max-catalog-images",
+        type=int,
+        default=MAX_CATALOG_IMAGES_DEFAULT,
+        help="Plafond d'images uniques à scraper / afficher (iframe + CSV).",
+    )
     p.add_argument("--debug-scroll", action="store_true")
     return p.parse_args()
 
@@ -64,6 +80,7 @@ def run_pipeline(
     scroll_pause: float,
     min_image_side: int,
     debug_scroll: bool,
+    max_catalog_images: int = MAX_CATALOG_IMAGES_DEFAULT,
 ) -> dict:
     frontend_dir = Path(frontend_dir).resolve()
     snapshots_root = frontend_dir / "public" / "snapshots"
@@ -85,6 +102,7 @@ def run_pipeline(
         scroll_pause=scroll_pause,
         min_image_side=min_image_side,
         debug_scroll=debug_scroll,
+        max_catalog_images=max_catalog_images,
     )
 
     redesign_path = snapshot.html_path.with_name("redesign.html")
@@ -168,6 +186,7 @@ def main() -> None:
         scroll_pause=args.scroll_pause,
         min_image_side=args.min_image_side,
         debug_scroll=args.debug_scroll,
+        max_catalog_images=args.max_catalog_images,
     )
 
 

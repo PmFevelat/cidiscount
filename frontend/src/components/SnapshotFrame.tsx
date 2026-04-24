@@ -74,6 +74,9 @@ export function SnapshotFrame({ src, title, fallbackHeight }: Props) {
         pointerEvents: "none",
         background: "#fff",
       }}
+      // CDNs (ex. Williams-Sonoma) refusent souvent les <img> avec Referer: localhost
+      // quand l’enfant ne définit pas de politique (snapshots générés avant le meta no-referrer).
+      referrerPolicy="no-referrer"
       sandbox="allow-same-origin"
       loading="eager"
     />

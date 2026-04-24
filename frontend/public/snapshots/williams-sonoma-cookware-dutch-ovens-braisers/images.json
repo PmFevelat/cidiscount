@@ -1,0 +1,502 @@
+[
+  {
+    "order": 1,
+    "image_url": "https://www.williams-sonoma.com/netstorage/images/design-system/icons/close.svg",
+    "alt": "close",
+    "top": 0.0,
+    "left": 0.0,
+    "width": 150.0,
+    "height": 150.0,
+    "product_url": ""
+  },
+  {
+    "order": 2,
+    "image_url": "https://www.williams-sonoma.com/netstorage/images/design-system/icons/chevron-left.svg",
+    "alt": "chevron left",
+    "top": 0.0,
+    "left": 0.0,
+    "width": 150.0,
+    "height": 150.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-round-dutch-oven/"
+  },
+  {
+    "order": 3,
+    "image_url": "https://www.williams-sonoma.com/netstorage/images/design-system/icons/chevron-right.svg",
+    "alt": "chevron right",
+    "top": 0.0,
+    "left": 0.0,
+    "width": 150.0,
+    "height": 150.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-round-dutch-oven/"
+  },
+  {
+    "order": 4,
+    "image_url": "https://cdn.cookielaw.org/logos/static/ot_company_logo.png",
+    "alt": "West Elm Logo",
+    "top": 0.0,
+    "left": 0.0,
+    "width": 2042.0,
+    "height": 280.0,
+    "product_url": ""
+  },
+  {
+    "order": 5,
+    "image_url": "https://assets.wsimgs.com/wsimgs/ab/images/dp/ecm/202541/0602/001/001.jpg",
+    "alt": "Find the Right Cookware",
+    "top": 324.0,
+    "left": 24.0,
+    "width": 1391.9921875,
+    "height": 128.3671875,
+    "product_url": ""
+  },
+  {
+    "order": 6,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202552/0013/img67c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron Round Dutch Oven",
+    "top": 626.375,
+    "left": -2382.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-round-dutch-oven/"
+  },
+  {
+    "order": 7,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202611/0468/le-creuset-signature-enameled-cast-iron-round-dutch-oven-1-c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron Round Dutch Oven",
+    "top": 626.375,
+    "left": -2007.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-round-dutch-oven/"
+  },
+  {
+    "order": 8,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202601/0095/staub-enameled-cast-iron-round-dutch-oven-c.jpg",
+    "alt": "Staub Enameled Cast Iron Round Dutch Oven",
+    "top": 626.375,
+    "left": -1983.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/staub-round-cocotte/"
+  },
+  {
+    "order": 9,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202614/0221/le-creuset-signature-enameled-cast-iron-round-dutch-oven-1-c.jpg",
+    "alt": "Alternate View 1",
+    "top": 626.375,
+    "left": -1632.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-round-dutch-oven/"
+  },
+  {
+    "order": 10,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202610/0333/staub-enameled-cast-iron-round-dutch-oven-c.jpg",
+    "alt": "Staub Enameled Cast Iron Round Dutch Oven",
+    "top": 626.375,
+    "left": -1608.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/staub-round-cocotte/"
+  },
+  {
+    "order": 11,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202613/0683/le-creuset-signature-enameled-cast-iron-deep-round-oven-6--c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron Deep Round Oven, 6 1/2-Qt.",
+    "top": 626.375,
+    "left": -1584.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-enameled-cast-iron-signature-deep-round-oven/"
+  },
+  {
+    "order": 12,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202611/0469/le-creuset-signature-enameled-cast-iron-round-dutch-oven-2-c.jpg",
+    "alt": "Alternate View 2",
+    "top": 626.375,
+    "left": -1257.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-round-dutch-oven/"
+  },
+  {
+    "order": 13,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202614/0281/staub-enameled-cast-iron-essential-french-oven-c.jpg",
+    "alt": "Alternate View 1",
+    "top": 626.375,
+    "left": -1233.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/staub-round-cocotte/"
+  },
+  {
+    "order": 14,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202607/0410/le-creuset-signature-enameled-cast-iron-deep-round-oven-6--c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron Deep Round Oven, 6 1/2-Qt.",
+    "top": 626.375,
+    "left": -1209.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-enameled-cast-iron-signature-deep-round-oven/"
+  },
+  {
+    "order": 15,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202611/0469/le-creuset-signature-enameled-cast-iron-round-dutch-oven-c.jpg",
+    "alt": "Alternate View 3",
+    "top": 626.375,
+    "left": -882.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-round-dutch-oven/"
+  },
+  {
+    "order": 16,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202550/0336/staub-enameled-cast-iron-essential-french-oven-c.jpg",
+    "alt": "Alternate View 2",
+    "top": 626.375,
+    "left": -858.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/staub-round-cocotte/"
+  },
+  {
+    "order": 17,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202611/0463/le-creuset-signature-enameled-cast-iron-deep-round-oven-6--c.jpg",
+    "alt": "Alternate View 2",
+    "top": 626.375,
+    "left": -834.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-enameled-cast-iron-signature-deep-round-oven/"
+  },
+  {
+    "order": 18,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202611/0469/le-creuset-signature-enameled-cast-iron-round-dutch-oven-1-c.jpg",
+    "alt": "Alternate View 4",
+    "top": 626.375,
+    "left": -507.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-round-dutch-oven/"
+  },
+  {
+    "order": 19,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202610/0333/staub-enameled-cast-iron-round-dutch-oven-1-c.jpg",
+    "alt": "Alternate View 3",
+    "top": 626.375,
+    "left": -483.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/staub-round-cocotte/"
+  },
+  {
+    "order": 20,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202607/0411/le-creuset-signature-enameled-cast-iron-deep-round-oven-6--c.jpg",
+    "alt": "Alternate View 3",
+    "top": 626.375,
+    "left": -459.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-enameled-cast-iron-signature-deep-round-oven/"
+  },
+  {
+    "order": 21,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202611/0467/le-creuset-signature-enameled-cast-iron-round-dutch-oven-c.jpg",
+    "alt": "Alternate View 5",
+    "top": 626.375,
+    "left": -132.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-round-dutch-oven/"
+  },
+  {
+    "order": 22,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202550/0335/staub-enameled-cast-iron-french-creme-collection-1-c.jpg",
+    "alt": "Alternate View 5",
+    "top": 626.375,
+    "left": -108.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/staub-round-cocotte/"
+  },
+  {
+    "order": 23,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202605/0335/le-creuset-enameled-cast-iron-signature-deep-round-oven-6--c.jpg",
+    "alt": "Alternate View 4",
+    "top": 626.375,
+    "left": -84.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-enameled-cast-iron-signature-deep-round-oven/"
+  },
+  {
+    "order": 24,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202616/0004/staub-enameled-cast-iron-round-dutch-oven-4-qt-1-c.jpg",
+    "alt": "Alternate View 6",
+    "top": 626.375,
+    "left": 267.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/staub-round-cocotte/"
+  },
+  {
+    "order": 25,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202607/0402/le-creuset-heritage-open-rectangular-dishes-set-of-3-2-c.jpg",
+    "alt": "Alternate View 5",
+    "top": 626.375,
+    "left": 291.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-enameled-cast-iron-signature-deep-round-oven/"
+  },
+  {
+    "order": 26,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202606/0472/le-creuset-signature-enameled-cast-iron-deep-round-oven-6--c.jpg",
+    "alt": "Alternate View 6",
+    "top": 626.375,
+    "left": 666.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-enameled-cast-iron-signature-deep-round-oven/"
+  },
+  {
+    "order": 27,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202608/0113/le-creuset-signature-enameled-cast-iron-french-oven-2-1-2--1-c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron French Oven, 2 1/2-Qt.",
+    "top": 1285.46875,
+    "left": -2382.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-cast-iron-stew-pot/"
+  },
+  {
+    "order": 28,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202609/0005/le-creuset-signature-enameled-cast-iron-french-oven-2-1-2--c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron French Oven, 2 1/2-Qt.",
+    "top": 1285.46875,
+    "left": -2007.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-cast-iron-stew-pot/"
+  },
+  {
+    "order": 29,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202552/0010/img105c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron Oval Dutch Oven",
+    "top": 1285.46875,
+    "left": -1983.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-oval-dutch-oven/"
+  },
+  {
+    "order": 30,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202605/0129/le-creuset-signature-enameled-cast-iron-oval-dutch-oven-c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron Oval Dutch Oven",
+    "top": 1285.46875,
+    "left": -1608.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-oval-dutch-oven/"
+  },
+  {
+    "order": 31,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202612/0131/le-creuset-signature-enameled-cast-iron-braiser-1-c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron Braiser",
+    "top": 1285.46875,
+    "left": -1584.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-braiser/"
+  },
+  {
+    "order": 32,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202609/0483/le-creuset-signature-enameled-cast-iron-french-oven-2-1-2--c.jpg",
+    "alt": "Alternate View 2",
+    "top": 1285.46875,
+    "left": -1257.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-cast-iron-stew-pot/"
+  },
+  {
+    "order": 33,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202611/0466/le-creuset-signature-enameled-cast-iron-oval-dutch-oven-1-c.jpg",
+    "alt": "Alternate View 2",
+    "top": 1285.46875,
+    "left": -1233.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-oval-dutch-oven/"
+  },
+  {
+    "order": 34,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202608/0209/le-creuset-signature-enameled-cast-iron-braiser-3-c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron Braiser",
+    "top": 1285.46875,
+    "left": -1209.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-braiser/"
+  },
+  {
+    "order": 35,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202603/0329/le-creuset-enameled-cast-iron-signature-french-oven-2-1-2--c.jpg",
+    "alt": "Alternate View 4",
+    "top": 1285.46875,
+    "left": -882.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-cast-iron-stew-pot/"
+  },
+  {
+    "order": 36,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202611/0466/le-creuset-signature-enameled-cast-iron-oval-dutch-oven-c.jpg",
+    "alt": "Alternate View 3",
+    "top": 1285.46875,
+    "left": -858.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-oval-dutch-oven/"
+  },
+  {
+    "order": 37,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202607/0415/le-creuset-signature-enameled-cast-iron-braiser-2-c.jpg",
+    "alt": "Alternate View 1",
+    "top": 1285.46875,
+    "left": -834.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-braiser/"
+  },
+  {
+    "order": 38,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202601/0144/jean-dubost-laguiole-wine-bottle-opener-set-c.jpg",
+    "alt": "Alternate View 5",
+    "top": 1285.46875,
+    "left": -507.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-cast-iron-stew-pot/"
+  },
+  {
+    "order": 39,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202552/0005/le-creuset-signature-enameled-cast-iron-oval-dutch-oven-c.jpg",
+    "alt": "Alternate View 4",
+    "top": 1285.46875,
+    "left": -483.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-oval-dutch-oven/"
+  },
+  {
+    "order": 40,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202607/0415/le-creuset-signature-enameled-cast-iron-braiser-5-c.jpg",
+    "alt": "Alternate View 2",
+    "top": 1285.46875,
+    "left": -459.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-braiser/"
+  },
+  {
+    "order": 41,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202609/0197/le-creuset-signature-enameled-cast-iron-french-oven-2-1-2--c.jpg",
+    "alt": "Alternate View 6",
+    "top": 1285.46875,
+    "left": -132.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-cast-iron-stew-pot/"
+  },
+  {
+    "order": 42,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202605/0129/le-creuset-signature-enameled-cast-iron-oval-dutch-oven-1-c.jpg",
+    "alt": "Alternate View 5",
+    "top": 1285.46875,
+    "left": -108.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-oval-dutch-oven/"
+  },
+  {
+    "order": 43,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202607/0415/le-creuset-signature-enameled-cast-iron-braiser-1-c.jpg",
+    "alt": "Alternate View 3",
+    "top": 1285.46875,
+    "left": -84.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-braiser/"
+  },
+  {
+    "order": 44,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202545/0042/le-creuset-signature-enameled-cast-iron-oval-dutch-oven-c.jpg",
+    "alt": "Alternate View 6",
+    "top": 1285.46875,
+    "left": 267.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-oval-dutch-oven/"
+  },
+  {
+    "order": 45,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202607/0415/le-creuset-signature-enameled-cast-iron-braiser-3-c.jpg",
+    "alt": "Alternate View 4",
+    "top": 1285.46875,
+    "left": 291.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-braiser/"
+  },
+  {
+    "order": 46,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202607/0415/le-creuset-signature-enameled-cast-iron-braiser-c.jpg",
+    "alt": "Alternate View 5",
+    "top": 1285.46875,
+    "left": 666.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-signature-braiser/"
+  },
+  {
+    "order": 47,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202608/0118/le-creuset-signature-enameled-cast-iron-soup-pot-4-1-2-qt-1-c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron Soup Pot, 4 1/2-Qt.",
+    "top": 1944.5625,
+    "left": -2382.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-soup-pot/"
+  },
+  {
+    "order": 48,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202608/0118/le-creuset-signature-enameled-cast-iron-soup-pot-4-1-2-qt-c.jpg",
+    "alt": "Le Creuset Signature Enameled Cast Iron Soup Pot, 4 1/2-Qt.",
+    "top": 1944.5625,
+    "left": -2007.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-soup-pot/"
+  },
+  {
+    "order": 49,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202609/0118/staub-enameled-cast-iron-everything-braiser-3-1-2-qt-1-c.jpg",
+    "alt": "Staub Enameled Cast Iron Everything Braiser, 3 1/2-Qt.",
+    "top": 1944.5625,
+    "left": -1983.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/staub-cast-iron-braiser-with-glass-lid/"
+  },
+  {
+    "order": 50,
+    "image_url": "https://assets.wsimgs.com/wsimgs/rk/images/dp/wcm/202611/0153/le-creuset-signature-enameled-cast-iron-soup-pot-4-1-2-qt-1-c.jpg",
+    "alt": "Alternate View 1",
+    "top": 1944.5625,
+    "left": -1632.0,
+    "width": 375.0,
+    "height": 375.0,
+    "product_url": "https://www.williams-sonoma.com/products/le-creuset-soup-pot/"
+  }
+]

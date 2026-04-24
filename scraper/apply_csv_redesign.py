@@ -17,6 +17,29 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
+from scraper.heal_html_images import heal_lazy_images_in_html
+
+GREY_PLACEHOLDER = (
+    "data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'"
+    "%20width%3D'1'%20height%3D'1'%3E%3Crect%20fill%3D'%23808080'"
+    "%20width%3D'1'%20height%3D'1'%2F%3E%3C%2Fsvg%3E"
+)
+
+# Injecté si absent (CDNs e-commerce + iframe localhost, cf. FREEZE 5b dans snapshot_site).
+REFERRER_META_SNIPPET = (
+    '<meta id="__snap_referrer__" name="referrer" content="no-referrer" />'
+)
+
+
+def ensure_referrer_meta_in_html(html: str) -> str:
+    """Garantit no-referrer sur le document (charge des images sur CDN stricts)."""
+    if "__snap_referrer__" in html:
+        return html
+    m = re.search(r"(?i)<head[^>]*>", html)
+    if not m:
+        return html
+    return html[: m.end()] + "\n" + REFERRER_META_SNIPPET + "\n" + html[m.end() :]
+
 
 SIZE_SUFFIX_RE = re.compile(r"_[A-Z]+_NOPAD$", re.IGNORECASE)
 OLD_URL_KEYS = (
@@ -64,8 +87,10 @@ def load_mapping(csv_path: Path) -> list[tuple[str, str]]:
                 processed = (row.get(key) or "").strip()
                 if processed:
                     break
-            if not original or not processed:
+            if not original:
                 continue
+            if not processed:
+                processed = GREY_PLACEHOLDER
             pairs.append((original, processed))
     return pairs
 
@@ -155,10 +180,17 @@ def apply_csv_to_snapshot(
         output_html_path = original_html_path.with_name("redesign.html")
     output_html_path = Path(output_html_path)
 
-    html = original_html_path.read_text(encoding="utf-8")
+    raw = original_html_path.read_text(encoding="utf-8")
+    html = ensure_referrer_meta_in_html(heal_lazy_images_in_html(raw))
+    if html != raw:
+        original_html_path.write_text(html, encoding="utf-8")
+        print(
+            "[REDESIGN] original.html mis à jour (LQIP / srcset / data-srcset + meta referrer).",
+            flush=True,
+        )
     mapping = load_mapping(csv_path)
     if not mapping:
-        raise ValueError(f"Aucune paire valide trouvée dans {csv_path}")
+        raise ValueError(f"Aucune ligne avec une URL source trouvée dans {csv_path}")
 
     new_html, stats = apply_replacements(html, mapping)
     output_html_path.write_text(new_html, encoding="utf-8")

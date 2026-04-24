@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { PdpSplitScaledIframe } from "@/components/PdpSplitScaledIframe";
 import { PdpSplitScreen } from "@/components/PdpSplitScreen";
@@ -17,16 +17,19 @@ export default async function ProjectPage({
   const project = await getProject(slug);
   if (!project) notFound();
 
+  if (project.status === "draft") {
+    const q = project.kind === "pdp" ? "resumePdp" : "resumeCatalog";
+    redirect(`/?${q}=${encodeURIComponent(slug)}`);
+  }
+
   const originalSrc = `/snapshots/${slug}/original.html`;
   const redesignSrc = `/snapshots/${slug}/redesign.html`;
   const fallbackHeight = project.documentHeight || 2400;
 
   if (project.kind === "pdp") {
-    const pdpSandbox =
-      "allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox";
-
+    const sandbox = "allow-scripts allow-same-origin";
     return (
-      <div className="relative h-[100dvh] w-full overflow-hidden bg-neutral-950">
+      <div className="relative h-[100dvh] w-full overflow-hidden">
         <div
           className="fixed top-4 left-4 z-[80]"
           style={{ pointerEvents: "auto" }}
@@ -54,17 +57,17 @@ export default async function ProjectPage({
           left={
             <PdpSplitScaledIframe
               src={originalSrc}
-              title={`${project.title} — PDP historique (gauche)`}
+              title={`${project.title} — original`}
               fallbackHeight={fallbackHeight}
-              sandbox={pdpSandbox}
+              sandbox={sandbox}
             />
           }
           right={
             <PdpSplitScaledIframe
               src={redesignSrc}
-              title={`${project.title} — PDP redesign (droite)`}
+              title={`${project.title} — redesign`}
               fallbackHeight={fallbackHeight}
-              sandbox={pdpSandbox}
+              sandbox={sandbox}
             />
           }
         />

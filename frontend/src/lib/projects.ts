@@ -113,3 +113,36 @@ export async function listProjectsByKind(
   const projects = await listProjects();
   return projects.filter((project) => project.kind === kind);
 }
+
+export async function getPdpImages(slug: string): Promise<{
+  original: string[];
+  redesign: string[];
+} | null> {
+  const safeSlug = safeProjectSlug(slug);
+  if (!safeSlug) return null;
+
+  const csvPath = path.join(SNAPSHOTS_DIR, safeSlug, "images.csv");
+  try {
+    const content = await fs.readFile(csvPath, "utf-8");
+    const lines = content.trim().split(/\r?\n/).slice(1);
+    const original: string[] = [];
+    const redesign: string[] = [];
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const first = line.indexOf(",");
+      const second = line.indexOf(",", first + 1);
+      if (first === -1 || second === -1) continue;
+      const formerUrl = line.slice(first + 1, second).trim();
+      const newUrl = line.slice(second + 1).trim();
+      if (formerUrl) {
+        original.push(formerUrl);
+        redesign.push(newUrl);
+      }
+    }
+
+    return original.length > 0 ? { original, redesign } : null;
+  } catch {
+    return null;
+  }
+}
